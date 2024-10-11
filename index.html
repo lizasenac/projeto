@@ -1,0 +1,48 @@
+document.getElementById("sendButton").addEventListener("click", sendMessage);
+
+async function sendMessage() {
+    const userInput = document.getElementById("userInput").value;
+    if (userInput.trim() === "") return;
+
+    // Adicionar mensagem do usuário no chat
+    addMessageToChat(userInput, "userMessage");
+    document.getElementById("userInput").value = ""; // Limpar campo de entrada
+
+    // Chamar API da Azure com a pergunta do usuário
+    const response = await fetch("https://alexa-m20y9agv-francecentral.openai.azure.com/openai/deployments/gpt-35-turboGracio/chat/completions?api-version=2023-03-15-preview", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "api-key": "5f74eb8579e44d3db55d9548a13d7eb1" // Substitua pela sua chave
+        },
+        body: JSON.stringify({
+            messages: [
+                { 
+                    role: "system", 
+                    content: "Você é um assistente de IA especializado em sustentabilidade. Seu objetivo é sugerir projetos sustentáveis em várias áreas, como energia renovável, reciclagem, consumo consciente, agricultura sustentável, mobilidade urbana e outros temas. Evite mencionar a ODS 5 (Igualdade de Gênero), e mantenha suas respostas práticas e diretas."
+                },
+                { role: "user", content: userInput }
+            ],
+            max_tokens: 800,
+            temperature: 0.7,
+            top_p: 0.95,
+            frequency_penalty: 0,
+            presence_penalty: 0
+        })
+    });
+
+    const data = await response.json();
+    const botMessage = data.choices[0].message.content;
+
+    // Adicionar resposta do bot no chat
+    addMessageToChat(botMessage, "botMessage");
+}
+
+function addMessageToChat(message, className) {
+    const chatbox = document.getElementById("chatbox");
+    const messageDiv = document.createElement("div");
+    messageDiv.classList.add("message", className);
+    messageDiv.textContent = message;
+    chatbox.appendChild(messageDiv);
+    chatbox.scrollTop = chatbox.scrollHeight; // Rolagem automática para a última mensagem
+}
